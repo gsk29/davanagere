@@ -1,0 +1,33 @@
+---
+- name: Run a playbook to deploy app
+  hosts: all
+  remote_user: ubuntu
+  become: true
+  tasks:
+    - name: Download Tomcat
+      get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.91/bin/apache-tomcat-9.0.91.tar.gz
+        dest: /opt/tomcat
+        mode: '0755'
+
+    - name: Create tomcat group
+      group:
+        name: tomcat
+        state: present
+
+    - name: Create tomcat user
+      user:
+        name: tomcat
+        group: tomcat
+        shell: /sbin/nologin
+
+    - name: extract Tomcat folder
+      shell: tar -xvzf /opt/tomcat/apache-tomcat-9.0.91.tar.gz; chmod-R 755 /opt/tomcat/; chown -R tomcat.tomcat /opt/tomcat
+
+    - name: Copy application
+      copy:
+        src: /var/lib/jenkins/workspace/testjob/sample.war
+        dest: /opt/tomcat/webapps/
+
+    - name: tomcat service start
+      shell:  /opt/tomcat/bin/shutdown.sh; /opt/tomcat/bin/startup.sh
